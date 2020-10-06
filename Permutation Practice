@@ -1,0 +1,73 @@
+using System;
+using System.Collections.Generic;
+//  Java program to print all the permutations 
+//  of the given string 
+public class GFG 
+{
+    public static List<string> finished = new List<string>();
+    //  Function to print all the permutations of str 
+    static void printPermutn(string str, string ans) 
+    {
+        //  If string is empty 
+        if (str.Length == 0) {
+            finished.Add(ans);
+            //Console.WriteLine(ans + " ");
+            return;
+        }
+        
+        for (int i = 0; i < str.Length; i++) 
+        {
+            //  ith character of str 
+            char ch = str[i];
+            //  Rest of the string after excluding 
+            //  the ith character 
+            string ros = (str.Substring(0, i) + str.Substring(i + 1));
+            //  Recurvise call 
+            printPermutn(ros, (ans + ch));
+        }
+        
+        ListPrint();
+        
+    }
+    
+    
+    
+    public static void ListPrint()
+    {
+        finished.Distinct();
+        for (int i = 0; i < finished.Count; i++)
+        {
+            //Console.WriteLine(finished[i]);
+        }
+    }
+    
+    //  Driver code 
+    public static void Main(string[] args) 
+    {
+        Console.Write("Please enter a string, or word to be permutated: ");
+        string s = Console.ReadLine();
+        printPermutn(s, "");
+    }
+}
+
+public static class ListExtensions
+{
+    public static void Distinct(this List<string> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+			Console.WriteLine("Checking {0}", list[i]);
+            for(int n = i+1; n < list.Count; i++)
+            {
+				Console.WriteLine("If {0}", list[i]);
+				Console.WriteLine("Is {0}", list[n]);
+                if (list[i] == list[n])
+                {
+                    Console.WriteLine("- {0}", list[n]);
+
+                    list.RemoveAt(i);
+                }
+            }
+        }
+    }
+}
