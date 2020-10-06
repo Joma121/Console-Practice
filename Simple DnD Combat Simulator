@@ -1,0 +1,329 @@
+using System;
+
+class Program
+{
+    public static void Main()
+    {
+        Prompt.New();
+        Opponent.Initiate();
+        Prompt.Display();
+    }
+}
+
+class Prompt
+{
+    public static void New()
+    {
+        Console.WriteLine("Hello and Welcome to the most basic of DnD Combat Simulator!");
+        Console.WriteLine("After choosing your focus, you may use 'help' to see a list of commands.\n");
+        ChooseClass(false);
+    }
+    public static void Display()
+    {
+        
+        Console.Write("\nYou: [{0}/{1}]hp  Enemy: [{2}/{3}hp] :: ", Player.currentHealth, Player.totalHealth, Opponent.currentHealth, Opponent.totalHealth);
+        string input = Console.ReadLine();
+        InputCommand(input);
+    }
+    
+    public static void ChooseClass(bool chosen)
+    {
+        if(!chosen)
+        {
+    		Console.Write("Please choose if you are speed (spd) or strength (str) based stats: ");
+            string choice = Console.ReadLine();
+    		ValidChoice(choice);
+        }
+        
+    }
+
+    static void ValidChoice(string choice)
+    {
+        switch(choice)
+        {
+            case "strength":
+            case "str":
+                Player.NewChar(true);
+                break;
+            case "speed":
+            case "spd":
+                Player.NewChar(false);
+                break;
+            default:
+                BadInput();
+                ChooseClass(false);
+                break;
+        }
+    }
+    
+    static void InputCommand(string cmd)
+    {
+        switch(cmd)
+        {
+            case "help":
+                Help();
+                break;
+            case "attack":
+            case "atk":
+                Maths.Attack(true);
+                break;
+            case "run":
+                Environment.Exit(0);
+                break;
+            case "status":
+                break;
+            default:
+                BadInput();
+                Display();
+                break;
+        }
+        Maths.Attack(false);
+        Display();
+    }
+    
+    static void BadInput()
+    {
+        Console.WriteLine("--That is not valid, try again.--");	
+		Console.WriteLine("");
+    }
+    
+    static void Help()
+    {
+        Console.WriteLine("\n*********** Hello! Welcome to the Help section. ************");
+        Console.WriteLine("* Command       : Description");       
+        Console.WriteLine("*===========================================================");
+        Console.WriteLine("* 'help'        : This information right here!");
+        Console.WriteLine("* 'attack'/'atk': Attempt to injure your opponent.");
+        Console.WriteLine("* 'run'         : Flee from combat, ends the program.");
+        Console.WriteLine("************************************************************\n");
+    }
+    
+
+    public static void WinLose(bool win)
+    {
+        if(win){
+            Console.WriteLine("\n************* You have won! **************");
+            Console.WriteLine("******************************************\n");
+            Environment.Exit(0);
+        } else {
+            Console.WriteLine("\n-------------- You have lost! --------------");
+            Console.WriteLine("--------------------------------------------\n");
+            Environment.Exit(0);
+        }
+    }
+}
+
+class Maths
+{
+    protected static readonly Random roll = new Random();
+	private static readonly object syncLock = new object();
+	
+	public static int RollDie(int die)
+	{
+	    lock(syncLock)
+		{
+		    return roll.Next(1, die + 1);
+		}
+	}
+	
+	public static void Attack(bool isPlayer)
+    {
+        int toHit = RollDie(20);
+        if(isPlayer)
+        {
+            if(toHit + Player.hitMod > Opponent.armor)
+            {
+                Damage(true, RollDie(Player.attackDie)+ Player.damMod);
+            } else {
+                Console.WriteLine("Your blade wiffs through the air.");
+            }
+        } else {
+            if(toHit + Opponent.hitMod > Player.armor)
+            {
+                Damage(false, RollDie(Opponent.attackDie) + Opponent.damMod);
+            } else {
+                Console.WriteLine("The opponent strikes vicously at the air.");
+            }
+        }
+        
+    }
+    
+    public static void Damage(bool isPlayer, int damage)
+    {
+        if (isPlayer)
+        {
+            Opponent.currentHealth -= damage;
+            Console.WriteLine("You strike out! Dealing {0} damage.", damage);
+            if(Opponent.currentHealth <= 0)
+            {
+                Prompt.WinLose(true);
+            }
+        } else {
+            Player.currentHealth -= damage;
+            Console.WriteLine("The enemy hits you! Dealing {0} damage", damage);
+            if(Player.currentHealth <= 0)
+            {
+                Prompt.WinLose(false);
+            }
+        }
+    }
+}
+
+class Player 
+{
+    //Properties
+    //private int _totalHP;
+    private static int _currentHP;
+    public static string type {get;set;}
+    public static int totalHealth {get;set;}
+    public static int currentHealth 
+    {
+        get{return _currentHP;}
+        set
+        {
+            if(value > totalHealth)
+            {
+                _currentHP = Player.totalHealth;
+                
+            }else{
+                _currentHP = value;
+            }
+        }
+    }
+    public static int strength {get;set;}
+    public static int dexterity {get;set;}
+    public static int attackDie {get;set;}
+    public static int hitMod 
+    {
+        get
+        {
+            return (type == "Strength") ? strMod : dexMod;
+        }
+    }
+    public static int damMod 
+    {
+        get
+        {
+            return (type == "Strength") ? strMod : dexMod;
+        }
+    }
+    public static int armor 
+    {
+        get{return 10 + dexMod;}
+    }
+    public static int strMod 
+    {
+        get{return Math.Abs(strength/2) - 5;}
+    }
+    public static int dexMod 
+    {
+        get{return Math.Abs(dexterity/2) - 5;}
+    }
+    //public int stat {get;set;}
+    //end properties
+    
+    public static void NewChar(bool isStrength)
+    {
+               // Console.WriteLine("I am NewChar \n");
+
+        if(isStrength)
+        {
+                    //Console.WriteLine("I am in IF \n");
+
+            type = "Strength";
+            totalHealth = 30;
+            strength = 18;
+            dexterity = 12;
+            attackDie = 10;
+                               // Console.WriteLine("I am in IF END \n");
+
+        } else{            
+                                //Console.WriteLine("I am in IF \n");
+
+            type = "Dexterity";
+            totalHealth = 20;
+            strength = 12;
+            dexterity = 18;
+            attackDie = 6;
+        }
+                          //  Console.WriteLine("I am before currentHealth \n");
+
+        currentHealth = totalHealth;
+                //Console.WriteLine("I am NewChar END \n");
+
+    }
+}
+
+class Opponent
+{
+     //Properties
+    private static int _currentHP;
+    public static string type {get;set;}
+    public static int totalHealth {get;set;}
+    public static int currentHealth 
+    {
+        get{return _currentHP;}
+        set
+        {
+            if(value > totalHealth)
+            {
+                _currentHP = Opponent.totalHealth;
+                
+            }else{
+                _currentHP = value;
+            }
+        }
+    }
+    public static int strength {get;set;}
+    public static int dexterity {get;set;}
+     public static int attackDie {get;set;}
+    public static int hitMod 
+    {
+        get
+        {
+            return (type == "Strength") ? strMod : dexMod;
+        }
+    }
+    public static int damMod 
+    {
+        get
+        {
+            return (type == "Strength") ? strMod : dexMod;
+        }
+    }
+    public static int armor 
+    {
+        get{return 10 + dexMod;}
+    }
+    public static int strMod 
+    {
+        get{return Math.Abs(strength/2) - 5;}
+    }
+    public static int dexMod 
+    {
+        get{return Math.Abs(dexterity/2) - 5;}
+    }
+    //public int stat {get;set;}
+    //end properties
+    
+    public static void Initiate()
+    {
+                //Console.WriteLine("I am Initiate \n");
+        int randType = Maths.RollDie(2);
+        if(randType == 1){
+        type = "Strength";
+            totalHealth = 24 + Maths.RollDie(8);
+            strength = 12 + Maths.RollDie(6);
+            dexterity = 10 + Maths.RollDie(4);
+            attackDie = 10;
+        } else {
+            type = "Dexterity";
+            totalHealth = 18 + Maths.RollDie(6);
+            strength = 10 + Maths.RollDie(4);
+            dexterity = 12 + Maths.RollDie(6);
+            attackDie = 6;
+        }
+        currentHealth = totalHealth;
+
+    }
+}
