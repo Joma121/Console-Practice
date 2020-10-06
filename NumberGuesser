@@ -1,0 +1,124 @@
+using System;
+					
+public class Program
+{
+	public static readonly Random pickNum = new Random();
+	public static int number {get; set;}
+	public static void Main()
+	{
+		Begin();
+		Guess();
+	}
+	public static void Begin()
+	{
+		PickNum();
+	}
+	
+	public static void PickNum()
+	{
+		number = pickNum.Next(0, 100);
+	}
+	
+	public static void Guess()
+	{
+		string guess;
+		int guessInt = 0;
+		do
+		{
+			Console.Write("Guess a number between 1 and 100: ");
+			guess = Console.ReadLine();
+		}while(!validGuess(guess));
+		guessInt = Convert.ToInt32(guess);
+		CheckGuess(guessInt);
+	}
+	
+	public static bool validGuess(string guess)
+	{
+		int inputInt = 0;
+		if (!int.TryParse(guess, out inputInt) || inputInt < 1)
+		{
+			BadInput();
+			return false;
+		}else
+		{
+			return true;
+		}
+	}
+	
+	public static bool validYN(string check)
+	{//Checks if input for any (y/n) input is valid
+		switch(check)
+		{
+			case "y":
+			case "n":
+				return true;
+			default:
+				BadInput();
+				return false;
+		}
+	}
+	
+	public static void BadInput()
+	{//Outputs message for invalid inputs
+		Console.WriteLine("--That is not valid, try again.--");	
+		Console.WriteLine("");
+	}
+	
+	public static void CheckGuess(int guess)
+	{
+		if(guess == number)
+		{
+			Winner();
+		} else if(guess < number)
+		{
+			TooLow();
+		} else
+		{
+			TooHigh();
+		}
+	}
+	
+	public static void TooLow()
+	{
+	    Console.WriteLine("");
+		Console.WriteLine("Sorry! Your guess is too low!");
+		Guess();
+	}
+	
+	public static void TooHigh()
+	{
+	    Console.WriteLine("");
+		Console.WriteLine("Sorry! Your guess is too high!");
+		Guess();
+	}
+	
+	public static void Winner()
+	{
+	    Console.WriteLine("");
+		Console.WriteLine("**Congratulations! You Win**");
+		Console.WriteLine("The number is {0}!", number);
+		//PlayAgain();
+	}
+	
+	/*
+	public static void PlayAgain()
+	{
+		string again;
+		do
+        {
+			Console.WriteLine("");
+			Console.Write("Would you like to play again? ");
+        	again = Console.ReadLine();
+        }while(!validYN(again));
+		switch(again)
+		{
+			case "y":
+				Console.WriteLine("");
+				Begin();
+				break;
+			default:
+				break;
+		}
+	}
+	*/
+}
