@@ -1,0 +1,307 @@
+using System;
+
+public class Program
+{
+	public static readonly Random roll = new Random();
+	private static readonly object syncLock = new object();
+	
+	public static int dieSize {get; set;}
+	public static int diceCount {get; set;}
+	public static bool reroll {get; set;}
+	public static bool modReroll {get; set;}
+	public static int eachValue { get; set; }
+	public static int allValue { get; set; }
+	
+	public static void Main()
+	{//Initializes Dice Rolla Program
+		Begin();
+	}
+	
+	public static void Begin()
+	{//Sequence of events to get inputs and return results
+		if(!reroll)
+		{//If user is rerolling exactly the previously used dice, do not ask for inputs about dice. 
+			InputDie();
+			InputCount();
+		}
+		
+		if(!modReroll)
+		{//If user is rerolling exactly the previously used modifiers, do not ask for inputs about modifiers.
+		    InputMods();
+		}
+		
+		
+		Results();
+		//Display results of dice rolls with applicable modifiers
+		Again();
+		//Ask if user would like to Roll again, Reroll previous dice, and if they want the same modifiers.
+	}
+
+	public static void InputDie()
+	{//Gathers input for the size of the Die/Dice
+		string die_size;
+
+		do
+		{
+			Console.Write("Choose a Die by sides: 2, 4, 6, 8, 10, 12, 20, 100: ");
+			die_size = Console.ReadLine();
+		}
+		while (!validSize(die_size));
+		dieSize = Convert.ToInt32(die_size);
+	}
+	
+	public static void InputCount()
+	{//Gathers input for the amount of Dice
+		string die_count;
+		do
+		{
+			Console.Write("How many dice do you want to roll? ");
+			die_count = Console.ReadLine();
+		}while (!validCount(die_count));
+		diceCount = Convert.ToInt32(die_count);
+	}
+	
+	//To Complete:
+	public static void InputMods()
+	{//Gathers input for modifiers to the Dice
+	    
+	    string addMod;
+	    string addEach;
+	    string addAll;
+	    
+	    eachValue = 0;
+	    allValue = 0;
+	    
+	    do
+		{
+		    if(!reroll&&!modReroll){
+			Console.Write("Would you like to have a modifier on the roll? (y/n): ");
+			addMod = Console.ReadLine();
+		    } else {
+		        addMod = "y";
+		    }
+		}while (!validYN(addMod));
+		if(addMod == "y"){
+		    
+    		do
+    		{
+    		    Console.Write("Is this modifier on the total of your roll? (y/n): ");
+    		    addAll = Console.ReadLine();
+    		}while(!validYN(addAll));
+    		
+        	if (addAll == "n"){
+        		do
+        		{
+        		    Console.Write("Is this modifier on each die? (y/n): ");
+        		    addEach = Console.ReadLine();
+        		}while(!validYN(addEach));
+        		if(addEach == "n")
+        		{
+        		    return;
+        		}
+        		InputModValue(true);
+    		} else {
+    		    InputModValue(false);
+    		}
+		}
+	}
+	
+	public static void InputModValue(bool isEach)
+	{
+	    string modInput;
+	    int modifier;
+	    
+	    Console.Write("What value would you like for this modifier? (precede with - for negative) ");
+	    modInput = Console.ReadLine();
+	    if(!Int32.TryParse(modInput, out modifier))
+	    {
+	        BadInput();
+	    }
+	    if(isEach)
+	    {
+	        allValue = 0;
+	        eachValue = modifier;
+	    } else {
+	        eachValue = 0;
+	        allValue = modifier;
+	    }
+	}//To Complete ^^
+	
+	public static void Results()
+	{//Gathers the results of the Dice rolls into an array
+	    int[] results = new int[diceCount];
+		for (int i = 0; i < diceCount; i++)
+		{
+			results[i] = rollDie(dieSize);
+		}
+
+		printResults(results);
+	}
+	
+	public static bool validSize(string size)
+	{//Checks if input for Die size is valid
+		int die;
+		if (!int.TryParse(size, out die))
+		{
+			BadInput();
+			return false;
+		}
+
+		switch (die)
+		{
+			case 2:
+			case 4:
+			case 6:
+			case 8:
+			case 10:
+			case 12:
+			case 20:
+			case 100:
+				return true;
+			default:
+				BadInput();
+				return false;
+		}
+	}
+
+	public static bool validCount(string count)
+	{//Checks if the input for the number of dice is valid
+		int dice;
+		if (!int.TryParse(count, out dice))
+		{
+			BadInput();
+			return false;
+		}
+
+		if (dice > 0)
+		{
+			return true;
+		}
+
+		BadInput();
+		return false;
+	}
+	
+	public static bool validYN(string check)
+	{//Checks if input for any (y/n) input is valid
+		switch(check)
+		{
+			case "y":
+			case "n":
+				return true;
+			default:
+				BadInput();
+				return false;
+		}
+	}
+
+	public static int rollDie(int inputDie)
+	{//Uses Random object to generate a die result, then returns the result to Results() for the array.
+
+		lock(syncLock)
+		{
+		int result = roll.Next(1, inputDie + 1);
+		return result;
+		}
+	}
+
+	public static void printResults(int[] results)
+	{//Outputs the amount of dice, dice size, total of rolls, and individual rolls results for the user.
+		int total = 0;
+		int modValue = 0;
+		string addSub = "";
+		string each ="";
+		for (int i = 0; i < results.Length; i++)
+		{
+			total += results[i];
+		}
+		if(allValue != 0)
+		{
+		    modValue = allValue;
+		    total += modValue;
+		}else if(eachValue != 0)
+		{
+		    modValue = eachValue;
+		    total += modValue * diceCount;
+		    each = "(each)";
+		}
+		if(modValue > 0)
+			{
+			    addSub = "+";
+			}
+		Console.WriteLine("");
+		if(modValue != 0){
+		    Console.Write("You rolled {0}d{1}{5}{4} {6} for: {2} [{3}] \n", results.Length, dieSize, total, string.Join(", ", results), modValue, addSub, each);
+		}else{
+		    Console.Write("You rolled {0}d{1} for: {2} [{3}] \n", results.Length, dieSize, total, string.Join(", ", results));
+
+		}
+		Console.WriteLine("");
+	}
+	
+	public static void BadInput()
+	{//Outputs message for invalid inputs
+		Console.WriteLine("--That is not valid, try again.--");	
+		Console.WriteLine("");
+	}
+	
+	public static void Again()
+	{//Takes input if the user would like to use the Dice Rolla again.
+		Console.Write("Would you like to roll again? (y/n): ");
+		string rerun = Console.ReadLine();
+		switch(rerun)
+		{
+			case "y":
+
+				Reroll();
+				break;
+			default:
+				break;
+		}
+	}
+	
+	public static void Reroll()
+	{//Takes input is the user would like to roll the same dice again.
+		string rollAgain;
+		do{
+		Console.Write("Would you like to reroll your previous dice? (y/n): ");
+		rollAgain = Console.ReadLine();
+		}while(!validYN(rollAgain));
+		
+		switch(rollAgain)
+		{
+			case "y":
+				reroll = true;
+				ModReroll();
+				Begin();
+				break;
+			case "n":
+				reroll = false;
+				Begin();
+				break;
+			default:
+				break;
+		}
+	}
+	
+	public static void ModReroll()
+	{//Takes input if the user would like to use the same modifiers again. 
+	    string rollAgain;
+	    do{
+		Console.Write("Would you like to change your modifier? (y/n): ");
+		rollAgain = Console.ReadLine();
+		}while(!validYN(rollAgain));
+		
+		switch(rollAgain)
+		{
+		    case "y":
+		    modReroll = false;
+		    break;
+		    case "n":
+		    modReroll = true;
+		    break;
+		    default:
+		    break;
+		}
+	}
+}
